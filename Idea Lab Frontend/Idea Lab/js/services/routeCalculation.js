@@ -241,10 +241,6 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
     const r2Cong = Math.min(45, Math.round(24 * mult));
     const r3Cong = Math.min(55, Math.round(36 * mult));
 
-    const r1Dist = 8.2;
-    const r1Speed = Math.max(16, Math.round(baseSpd * (1 - (r1Cong / 100) * (1 - vConfig.trafficResilience * 0.3))));
-    const r1Min = Math.max(r3Min + 4, Math.round((r1Dist / r1Speed) * 60) + (r1Cong > 80 ? 6 : 4)); // ~24 mins (Severe Congestion)
-
     const r2Dist = 9.0;
     const r2Speed = Math.round(baseSpd * (1 - (r2Cong / 100) * 0.25));
     const r2Min = Math.round((r2Dist / r2Speed) * 60); // ~14 mins (FASTEST)
@@ -252,6 +248,10 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
     const r3Dist = 10.4;
     const r3Speed = Math.round(baseSpd * (1 - (r3Cong / 100) * 0.35));
     const r3Min = Math.round((r3Dist / r3Speed) * 60); // ~20 mins
+
+    const r1Dist = 8.2;
+    const r1Speed = Math.max(16, Math.round(baseSpd * (1 - (r1Cong / 100) * (1 - vConfig.trafficResilience * 0.3))));
+    const r1Min = Math.max(r3Min + 4, Math.round((r1Dist / r1Speed) * 60) + (r1Cong > 80 ? 6 : 4)); // ~24 mins (Severe Congestion)
 
     return [
       {
@@ -629,6 +629,10 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
   const r3Speed = Math.round(baseSpd * (1 - (r3Cong / 100) * 0.3));
   const r3Min = Math.max(8, Math.round((r3Dist / r3Speed) * 60));
 
+  const r1Speed = Math.max(14, Math.round(baseSpd * (1 - (r1Cong / 100) * 0.45)));
+  const r1Delay = r1Cong > 80 ? 6 : (r1Cong > 60 ? 4 : 2);
+  r1Min = Math.max(r2Min + 4, Math.round((r1Dist / r1Speed) * 60) + r1Delay);
+
   const originShort = origin.name.split(',')[0].split('(')[0].trim();
   const destShort = destination.name.split(',')[0].split('(')[0].trim();
 
@@ -650,14 +654,14 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
       isRecommended: true,
       isBest: true,
       hasSevereCongestion: false,
-      redistributionAdvantage: `Saves ${Math.max(3, r1Min - r2Min)} mins: redistributes vehicles onto parallel free-flowing avenues.`,
+      redistributionAdvantage: `Saves ${r1Min - r2Min} mins: redistributes vehicles onto parallel free-flowing avenues.`,
       waypoints: realPath2,
       segments: [
         { name: `${originShort} Feeder Avenue`, status: 'green', lengthKm: parseFloat((r2Dist * 0.35).toFixed(1)), congestion: 22 },
         { name: 'Underutilized Parallel Arterial (Smooth Flow)', status: 'green', lengthKm: parseFloat((r2Dist * 0.45).toFixed(1)), congestion: 18 },
         { name: `Approach Corridor to ${destShort}`, status: 'green', lengthKm: parseFloat((r2Dist * 0.20).toFixed(1)), congestion: 25 }
       ],
-      description: `Recommended to reduce congestion: Least congested path (${r2Cong}% density). Saves ${Math.max(3, r1Min - r2Min)} mins by redistributing traffic away from arterial bottlenecks.`
+      description: `Recommended to reduce congestion: Least congested path (${r2Cong}% density). Saves ${r1Min - r2Min} mins by redistributing traffic away from arterial bottlenecks.`
     },
     {
       id: 'route-1',
@@ -665,7 +669,7 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
       routeNum: 'Route 1',
       distKm: r1Dist,
       durationMin: r1Min,
-      avgSpeed: Math.max(14, Math.round(baseSpd * (1 - (r1Cong / 100) * 0.4))),
+      avgSpeed: r1Speed,
       congestionPct: r1Cong,
       trafficLevel: r1Cong > 80 ? 'Severe' : 'Heavy',
       trafficClass: r1Cong > 80 ? 'Severe Congestion' : 'Heavy Traffic',
