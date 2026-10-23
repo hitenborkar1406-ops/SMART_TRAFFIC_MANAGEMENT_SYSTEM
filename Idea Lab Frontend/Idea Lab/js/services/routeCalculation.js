@@ -572,7 +572,77 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
     ];
   }
 
-  // 5. Dynamic Real Road Geometry calculation via OSRM for ANY custom pair in Nagpur
+  // 5. Preset Scenario: Hingna Road <-> Sitabuldi
+  const isHingnaToSitabuldi = (origin.id === 'hingna_road' && destination.id === 'sitabuldi') ||
+                              (origin.id === 'sitabuldi' && destination.id === 'hingna_road');
+  if (isHingnaToSitabuldi && REAL_STREET_PATHS.hingna_to_sitabuldi_main) {
+    const isFwd = origin.id === 'hingna_road';
+    let p1 = isFwd ? [...REAL_STREET_PATHS.hingna_to_sitabuldi_main] : [...REAL_STREET_PATHS.hingna_to_sitabuldi_main].reverse();
+    let p2 = isFwd ? [...REAL_STREET_PATHS.hingna_to_sitabuldi_alt] : [...REAL_STREET_PATHS.hingna_to_sitabuldi_alt].reverse();
+    p1 = alignPathEndpoints(p1, origin, destination);
+    p2 = alignPathEndpoints(p2, origin, destination);
+
+    const baseSpd = vConfig.baseSpeed;
+    const dur1 = Math.round((9.5 / (baseSpd * 0.45)) * 60) + (injectIncident ? 5 : 3); // ~26-28 mins (Severe Congestion)
+    const dur2 = Math.round((10.2 / (baseSpd * 0.85)) * 60); // ~18-19 mins (Recommended)
+
+    return [
+      {
+        id: 'route-2',
+        name: 'Route 2 – via Ambazari & Shankar Nagar Corridor',
+        routeNum: 'Route 2',
+        distKm: 10.2,
+        durationMin: dur2,
+        avgSpeed: Math.round(baseSpd * 0.85),
+        congestionPct: Math.min(45, Math.round(28 * mult)),
+        trafficLevel: 'Low',
+        trafficClass: 'Low Traffic',
+        trafficBadge: 'badge-green',
+        status: 'Recommended – Fastest Route',
+        statusTitle: '★ RECOMMENDED – FASTEST ROUTE',
+        recommendationTag: '★ RECOMMENDED',
+        isRecommended: true,
+        isBest: true,
+        hasSevereCongestion: false,
+        redistributionAdvantage: `Saves ${dur1 - dur2} mins: bypasses Hingna T-Point and Subhash Nagar bottlenecks.`,
+        waypoints: p2,
+        segments: [
+          { name: 'Hingna Road to Ambazari Lake Drive', status: 'green', lengthKm: 4.2, congestion: 24 },
+          { name: 'Shankar Nagar Square Corridor', status: 'green', lengthKm: 3.5, congestion: 28 },
+          { name: 'North Ambazari Road to Sitabuldi', status: 'green', lengthKm: 2.5, congestion: 30 }
+        ],
+        description: 'Smooth lake boulevard and Shankar Nagar corridor avoiding industrial commuter bottlenecks.'
+      },
+      {
+        id: 'route-1',
+        name: 'Route 1 – via Hingna T-Point Direct Arterial',
+        routeNum: 'Route 1',
+        distKm: 9.5,
+        durationMin: dur1,
+        avgSpeed: Math.round(baseSpd * 0.45),
+        congestionPct: Math.min(95, Math.round(88 * mult)),
+        trafficLevel: 'Severe',
+        trafficClass: 'Severe Congestion',
+        trafficBadge: 'badge-red',
+        status: 'Congested Arterial (Choke Point)',
+        statusTitle: 'Direct Corridor – Heavy Bottleneck',
+        recommendationTag: 'Congested Arterial',
+        isRecommended: false,
+        isBest: false,
+        hasSevereCongestion: true,
+        redistributionAdvantage: 'Direct road with severe freight delays at Hingna T-Point and Subhash Nagar.',
+        waypoints: p1,
+        segments: [
+          { name: 'Hingna Industrial Zone Feeder', status: 'yellow', lengthKm: 3.0, congestion: 65 },
+          { name: 'Hingna T-Point Junction (Severe Bottleneck)', status: 'red', lengthKm: 3.8, congestion: 92 },
+          { name: 'Subhash Nagar to Sitabuldi Approach', status: 'orange', lengthKm: 2.7, congestion: 78 }
+        ],
+        description: 'Heavy commuter and industrial traffic creates 8-10 min queue delay at Hingna T-Point.'
+      }
+    ];
+  }
+
+  // 6. Dynamic Real Road Geometry calculation via OSRM for ANY custom pair in Nagpur
   const osrmRoutes = await fetchOsrmRealGeometry(origin.lng, origin.lat, destination.lng, destination.lat);
 
   let realPath1 = [];
@@ -584,7 +654,6 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
   if (osrmRoutes && osrmRoutes.length > 0) {
     realPath1 = osrmRoutes[0].coordinates;
     r1Dist = osrmRoutes[0].distanceKm;
-    r1Min = osrmRoutes[0].durationMin;
     if (osrmRoutes[1] && osrmRoutes[1].coordinates && osrmRoutes[1].coordinates.length > 5) {
       realPath2 = osrmRoutes[1].coordinates;
     }
@@ -621,17 +690,19 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
   const r2Cong = Math.min(45, Math.round(28 * mult));
   const r3Cong = Math.min(55, Math.round(40 * mult));
 
+  const minTransit = Math.max(2, Math.round(r1Dist * 1.5));
   const r2Dist = parseFloat((r1Dist * 1.08).toFixed(1));
   const r2Speed = Math.round(baseSpd * (1 - (r2Cong / 100) * 0.22));
-  const r2Min = Math.max(6, Math.round((r2Dist / r2Speed) * 60));
+  const r2Min = Math.max(minTransit, Math.round((r2Dist / r2Speed) * 60));
 
   const r3Dist = parseFloat((r1Dist * 1.25).toFixed(1));
   const r3Speed = Math.round(baseSpd * (1 - (r3Cong / 100) * 0.3));
-  const r3Min = Math.max(8, Math.round((r3Dist / r3Speed) * 60));
+  const r3Min = Math.max(minTransit + 2, Math.round((r3Dist / r3Speed) * 60));
 
   const r1Speed = Math.max(14, Math.round(baseSpd * (1 - (r1Cong / 100) * 0.45)));
   const r1Delay = r1Cong > 80 ? 6 : (r1Cong > 60 ? 4 : 2);
-  r1Min = Math.max(r2Min + 4, Math.round((r1Dist / r1Speed) * 60) + r1Delay);
+  const minTimeDiff = Math.max(3, Math.round(r1Dist * 0.6));
+  r1Min = Math.max(r2Min + minTimeDiff, Math.round((r1Dist / r1Speed) * 60) + r1Delay);
 
   const originShort = origin.name.split(',')[0].split('(')[0].trim();
   const destShort = destination.name.split(',')[0].split('(')[0].trim();
@@ -796,7 +867,7 @@ window.generateNagpurRoutes = function(origin, destination, vehicleMode, timePer
       isRecommended: true,
       isBest: true,
       hasSevereCongestion: false,
-      redistributionAdvantage: 'Saves 4 minutes: utilizes underutilized VIP Road parallel corridor.',
+      redistributionAdvantage: 'Saves 10 minutes: utilizes underutilized VIP Road parallel corridor.',
       waypoints: p2,
       segments: [
         { name: 'Ajni Sq to Congress Nagar link', status: 'green', lengthKm: 1.8, congestion: 20 },
@@ -810,8 +881,8 @@ window.generateNagpurRoutes = function(origin, destination, vehicleMode, timePer
       name: 'Route 1 – via Wardha Road Main Arterial',
       routeNum: 'Route 1',
       distKm: 8.2,
-      durationMin: 18,
-      avgSpeed: 24,
+      durationMin: 24,
+      avgSpeed: 18,
       congestionPct: 84,
       trafficLevel: 'Severe',
       trafficClass: 'Severe Congestion',
