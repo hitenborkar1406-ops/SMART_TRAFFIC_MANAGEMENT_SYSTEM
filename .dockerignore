@@ -1,0 +1,7 @@
+.git
+.github
+*.pyc
+__pycache__
+*.pptx
+*.log
+.pytest_cache
