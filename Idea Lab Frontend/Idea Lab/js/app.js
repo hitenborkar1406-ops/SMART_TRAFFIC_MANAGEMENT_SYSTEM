@@ -217,6 +217,14 @@ function NagpurTrafficMap({
             segColor = '#ca8a04'; // Moderate (40-65%)
           }
 
+          const segPoly = L.polyline([segStart, segEnd], {
+            color: segColor,
+            weight: 6,
+            opacity: 1,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(map);
+
           const isEarly15 = (timePeriod === 'early15');
           const congPct = selectedRoute ? selectedRoute.congestionPct : 0;
           const congColor = congPct > 75 ? '#dc2626' : (congPct > 40 ? '#ea580c' : '#16a34a');
