@@ -217,21 +217,46 @@ function NagpurTrafficMap({
             segColor = '#ca8a04'; // Moderate (40-65%)
           }
 
-          const segPoly = L.polyline([segStart, segEnd], {
-            color: segColor,
-            weight: 6,
-            opacity: 1,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(map);
+          const isEarly15 = (timePeriod === 'early15');
+          const congPct = selectedRoute ? selectedRoute.congestionPct : 0;
+          const congColor = congPct > 75 ? '#dc2626' : (congPct > 40 ? '#ea580c' : '#16a34a');
 
-          segPoly.bindTooltip(`<strong>${selectedRoute.name}</strong><br/>Avg Speed: ${selectedRoute.avgSpeed} km/h • Traffic: ${selectedRoute.trafficLevel}`, { sticky: true });
+          segPoly.bindTooltip(
+            `<strong>${selectedRoute.name}</strong><br/>` +
+            `🔴 Congestion: <b style="color:${congColor};">${congPct}%</b> ${isEarly15 ? '(🔮 15-Min Forecast)' : ''}<br/>` +
+            `Speed: ${selectedRoute.avgSpeed} km/h • ETA: ${selectedRoute.durationMin} min`,
+            { sticky: true }
+          );
           routeLayersRef.current.push(segPoly);
+        }
+
+        // Add Midpoint Congestion Callout Badge on Route
+        if (pts.length > 2) {
+          const midPt = pts[Math.floor(pts.length / 2)];
+          const isEarly15 = (timePeriod === 'early15');
+          const congPct = selectedRoute ? selectedRoute.congestionPct : 0;
+          const congColor = congPct > 75 ? '#dc2626' : (congPct > 40 ? '#ea580c' : '#16a34a');
+
+          const midCalloutIcon = L.divIcon({
+            className: 'map-midpoint-callout',
+            html: `<div class="midpoint-badge ${isEarly15 ? 'badge-early15' : ''}" style="border-left: 4px solid ${congColor};">
+              <span class="badge-icon">${isEarly15 ? '🔮' : '⚡'}</span>
+              <span class="badge-text"><b style="color:${congColor};">${congPct}%</b> Congestion ${isEarly15 ? '(15m Forecast)' : ''}</span>
+            </div>`,
+            iconSize: [200, 30],
+            iconAnchor: [100, 15]
+          });
+          const midMarker = L.marker(midPt, { icon: midCalloutIcon, zIndexOffset: 800 }).addTo(map);
+          routeLayersRef.current.push(midMarker);
         }
       }
     }
 
-    // 3. SOURCE MARKER: 🔵 Blue marker = Source (Centered on exact source point on top of route line)
+    const isEarly15 = (timePeriod === 'early15');
+    const congPct = selectedRoute ? selectedRoute.congestionPct : 0;
+    const congColor = congPct > 75 ? '#dc2626' : (congPct > 40 ? '#ea580c' : '#16a34a');
+
+    // 3. SOURCE MARKER: 🔵 Blue marker = Source with permanent congestion percentage tooltip
     const sourceIcon = L.divIcon({
       className: 'nagpur-marker-source',
       iconSize: [22, 22],
@@ -239,10 +264,18 @@ function NagpurTrafficMap({
     });
     const srcMarker = L.marker([origin.lat, origin.lng], { icon: sourceIcon, zIndexOffset: 1000 })
       .addTo(map)
-      .bindPopup(`<strong style="color:#1a73e8;">🔵 Source (Origin)</strong><br/><b>${origin.name}</b><br/><span style="font-size:11px;color:#64748b;">${origin.desc || 'Nagpur'}</span>`);
+      .bindPopup(`<strong style="color:#1a73e8;">🔵 Source (Origin)</strong><br/><b>${origin.name}</b><br/><span style="font-size:11px;color:#64748b;">${origin.desc || 'Nagpur'}</span><br/><b style="color:${congColor};">${congPct}% Congestion</b> ${isEarly15 ? '(🔮 15-Min Forecast)' : ''}`);
+
+    srcMarker.bindTooltip(
+      `<div class="map-marker-bubble source-bubble">
+        <div class="bubble-title">🔵 ${origin.name.split(',')[0]}</div>
+        <div class="bubble-sub">Traffic: <b style="color:${congColor};">${congPct}% Congestion</b> ${isEarly15 ? '<span class="bubble-tag">🔮 15m</span>' : ''}</div>
+      </div>`,
+      { permanent: true, direction: 'top', offset: [0, -12], className: 'custom-map-tooltip' }
+    );
     markerLayersRef.current.push(srcMarker);
 
-    // 4. DESTINATION MARKER: 🔴 Red marker = Destination (Centered on exact destination point on top of route line)
+    // 4. DESTINATION MARKER: 🔴 Red marker = Destination with permanent congestion percentage tooltip
     const destIcon = L.divIcon({
       className: 'nagpur-marker-dest',
       iconSize: [22, 22],
@@ -250,13 +283,21 @@ function NagpurTrafficMap({
     });
     const dstMarker = L.marker([destination.lat, destination.lng], { icon: destIcon, zIndexOffset: 1000 })
       .addTo(map)
-      .bindPopup(`<strong style="color:#dc2626;">🔴 Destination</strong><br/><b>${destination.name}</b><br/><span style="font-size:11px;color:#64748b;">${destination.desc || 'Nagpur'}</span>`);
+      .bindPopup(`<strong style="color:#dc2626;">🔴 Destination</strong><br/><b>${destination.name}</b><br/><span style="font-size:11px;color:#64748b;">${destination.desc || 'Nagpur'}</span><br/><b style="color:${congColor};">${congPct}% Congestion</b> ${isEarly15 ? '(🔮 15-Min Forecast)' : ''}`);
+
+    dstMarker.bindTooltip(
+      `<div class="map-marker-bubble dest-bubble">
+        <div class="bubble-title">🔴 ${destination.name.split(',')[0]}</div>
+        <div class="bubble-sub">ETA: <b>${selectedRoute ? selectedRoute.durationMin : 0} min</b> • <b style="color:${congColor};">${congPct}% Load</b></div>
+      </div>`,
+      { permanent: true, direction: 'top', offset: [0, -12], className: 'custom-map-tooltip' }
+    );
     markerLayersRef.current.push(dstMarker);
 
     // Automatically align map bounds from Source to Destination
     fitMapToRoute();
 
-  }, [origin, destination, routes, selectedRoute, showTraffic]);
+  }, [origin, destination, routes, selectedRoute, showTraffic, timePeriod]);
 
   // Trip Animation Simulation along real road geometry
   const handleStartTripSimulation = () => {
@@ -359,6 +400,27 @@ function NagpurTrafficMap({
     isLoadingRoute && e('div', { className: 'map-loading-overlay' },
       e('i', { className: 'fa-solid fa-spinner fa-spin' }),
       ' Finding best route along Nagpur roads...'
+    ),
+
+    // FLOATING LIVE CONGESTION HUD ON MAP (Source -> Destination with Congestion %)
+    selectedRoute && origin && destination && e('div', { className: `map-floating-panel map-route-hud-panel ${timePeriod === 'early15' ? 'hud-early15' : ''}` },
+      e('div', { className: 'hud-content' },
+        e('div', { className: 'hud-nodes' },
+          e('span', { className: 'hud-source' }, '🔵 ' + origin.name.split(',')[0]),
+          e('i', { className: 'fa-solid fa-arrow-right hud-arrow' }),
+          e('span', { className: 'hud-dest' }, '🔴 ' + destination.name.split(',')[0])
+        ),
+        e('div', { className: 'hud-stats' },
+          e('span', {
+            className: 'hud-congestion-badge',
+            style: {
+              background: selectedRoute.congestionPct > 75 ? '#dc2626' : (selectedRoute.congestionPct > 40 ? '#ea580c' : '#16a34a')
+            }
+          }, `${selectedRoute.congestionPct}% Congestion`),
+          timePeriod === 'early15' && e('span', { className: 'hud-forecast-tag' }, '🔮 15-Min Forecast'),
+          e('span', { className: 'hud-time' }, `${selectedRoute.durationMin} min (${selectedRoute.distKm} km)`)
+        )
+      )
     ),
 
     // TIME-OF-DAY TRAFFIC SELECTOR (Section 17 & 27)

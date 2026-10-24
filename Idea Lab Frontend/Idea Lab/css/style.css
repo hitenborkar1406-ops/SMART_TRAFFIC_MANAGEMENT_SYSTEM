@@ -2011,3 +2011,154 @@ html, body {
   }
 }
 
+/* ==========================================================================
+   MAP LIVE ROUTE HUD & MARKER CONGESTION BADGES
+   ========================================================================== */
+.map-route-hud-panel {
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 30px;
+  padding: 7px 18px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  transition: all 0.25s ease;
+  pointer-events: auto;
+}
+
+.map-route-hud-panel.hud-early15 {
+  border: 1.5px solid #8b5cf6;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+}
+
+.hud-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hud-nodes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #0f172a;
+}
+
+.hud-arrow {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.hud-stats {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hud-congestion-badge {
+  color: #ffffff;
+  font-size: 0.74rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 12px;
+  letter-spacing: 0.2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.hud-forecast-tag {
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 0.70rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.hud-time {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Custom Leaflet Map Tooltips */
+.custom-map-tooltip.leaflet-tooltip {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14) !important;
+  padding: 5px 9px !important;
+  font-family: inherit !important;
+  color: #0f172a !important;
+}
+
+.custom-map-tooltip.leaflet-tooltip::before {
+  border-top-color: #ffffff !important;
+}
+
+.map-marker-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.map-marker-bubble .bubble-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.map-marker-bubble .bubble-sub {
+  font-size: 0.72rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.map-marker-bubble .bubble-tag {
+  background: #7c3aed;
+  color: #ffffff;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Route Midpoint Floating Callout Badge */
+.map-midpoint-callout {
+  background: transparent !important;
+  border: none !important;
+}
+
+.midpoint-badge {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 18px;
+  padding: 4px 11px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.midpoint-badge.badge-early15 {
+  border: 1.5px solid #8b5cf6;
+  box-shadow: 0 3px 14px rgba(124, 58, 237, 0.3);
+}
+
+.midpoint-badge .badge-icon {
+  font-size: 0.82rem;
+}
+
+
