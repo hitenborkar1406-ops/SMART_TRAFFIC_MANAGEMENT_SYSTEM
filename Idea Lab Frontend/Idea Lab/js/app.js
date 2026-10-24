@@ -202,46 +202,127 @@ function NagpurTrafficMap({
         mainLine.bindTooltip(`<strong>${selectedRoute.name}</strong><br/>Avg Speed: ${selectedRoute.avgSpeed} km/h • Clean Route`, { sticky: true });
         routeLayersRef.current.push(mainLine);
       } else {
-        // Traffic-colored multi-segment route along real road geometry
+        // Traffic-colored multi-segment route using per-segment data
         const numPts = pts.length;
-        for (let i = 0; i < numPts - 1; i++) {
-          const segStart = pts[i];
-          const segEnd = pts[i + 1];
+        const isEarly15 = (timePeriod === 'early15');
+        const segments = selectedRoute.segments;
 
-          let segColor = '#16a34a'; // Green = Free flow (< 40%)
-          if (selectedRoute.hasSevereCongestion && (i >= Math.floor(numPts * 0.3) && i <= Math.floor(numPts * 0.7))) {
-            segColor = '#dc2626'; // Severe bottleneck section (e.g. Rahate Sq)
-          } else if (selectedRoute.congestionPct > 70) {
-            segColor = '#ea580c'; // Heavy (65-85%)
-          } else if (selectedRoute.congestionPct > 40) {
-            segColor = '#ca8a04'; // Moderate (40-65%)
-          }
+        // Color map for segment status values
+        const STATUS_COLORS = {
+          red: '#dc2626',
+          orange: '#ea580c',
+          yellow: '#ca8a04',
+          green: '#16a34a'
+        };
 
-          const segPoly = L.polyline([segStart, segEnd], {
-            color: segColor,
-            weight: 6,
-            opacity: 1,
-            lineCap: 'round',
-            lineJoin: 'round'
-          }).addTo(map);
-
-          const isEarly15 = (timePeriod === 'early15');
-          const congPct = selectedRoute ? selectedRoute.congestionPct : 0;
-          const congColor = congPct > 75 ? '#dc2626' : (congPct > 40 ? '#ea580c' : '#16a34a');
-
-          segPoly.bindTooltip(
-            `<strong>${selectedRoute.name}</strong><br/>` +
-            `🔴 Congestion: <b style="color:${congColor};">${congPct}%</b> ${isEarly15 ? '(🔮 15-Min Forecast)' : ''}<br/>` +
-            `Speed: ${selectedRoute.avgSpeed} km/h • ETA: ${selectedRoute.durationMin} min`,
-            { sticky: true }
-          );
-          routeLayersRef.current.push(segPoly);
+        // Helper: determine color from congestion percentage
+        function congestionToColor(pct) {
+          if (pct > 75) return STATUS_COLORS.red;
+          if (pct > 55) return STATUS_COLORS.orange;
+          if (pct > 35) return STATUS_COLORS.yellow;
+          return STATUS_COLORS.green;
         }
 
-        // Add Midpoint Congestion Callout Badge on Route
-        if (pts.length > 2) {
+        if (segments && segments.length > 0) {
+          // Distribute waypoints proportionally across defined segments by their lengthKm
+          const totalSegKm = segments.reduce((s, seg) => s + (seg.lengthKm || 1), 0);
+          const totalPairs = numPts - 1; // number of point-to-point pairs
+
+          let pairIdx = 0; // tracks which waypoint pair we're at
+
+          segments.forEach((seg, sIdx) => {
+            const segFraction = (seg.lengthKm || 1) / totalSegKm;
+            // How many waypoint pairs belong to this segment
+            let segPairCount;
+            if (sIdx === segments.length - 1) {
+              // Last segment takes all remaining pairs
+              segPairCount = totalPairs - pairIdx;
+            } else {
+              segPairCount = Math.max(1, Math.round(segFraction * totalPairs));
+              // Don't exceed remaining pairs
+              segPairCount = Math.min(segPairCount, totalPairs - pairIdx);
+            }
+
+            // Determine this segment's color
+            const segColor = seg.status ? (STATUS_COLORS[seg.status] || congestionToColor(seg.congestion || 0)) : congestionToColor(seg.congestion || 0);
+            const segCongestion = seg.congestion || 0;
+
+            // Draw each waypoint pair in this segment
+            for (let j = 0; j < segPairCount && (pairIdx + j) < totalPairs; j++) {
+              const idx = pairIdx + j;
+              const segPoly = L.polyline([pts[idx], pts[idx + 1]], {
+                color: segColor,
+                weight: 6,
+                opacity: 1,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }).addTo(map);
+
+              segPoly.bindTooltip(
+                `<strong>${selectedRoute.name}</strong><br/>` +
+                `📍 <em>${seg.name}</em><br/>` +
+                `${seg.status === 'red' ? '🔴' : seg.status === 'orange' ? '🟠' : seg.status === 'yellow' ? '🟡' : '🟢'} Congestion: <b style="color:${segColor};">${segCongestion}%</b> ${isEarly15 ? '(🔮 15-Min Forecast)' : ''}<br/>` +
+                `Speed: ${selectedRoute.avgSpeed} km/h • ETA: ${selectedRoute.durationMin} min`,
+                { sticky: true }
+              );
+              routeLayersRef.current.push(segPoly);
+            }
+
+            pairIdx += segPairCount;
+          });
+        } else {
+          // Fallback: no segment data available — use overall route congestion
+          const fallbackColor = congestionToColor(selectedRoute.congestionPct || 0);
+          for (let i = 0; i < numPts - 1; i++) {
+            const segPoly = L.polyline([pts[i], pts[i + 1]], {
+              color: fallbackColor,
+              weight: 6,
+              opacity: 1,
+              lineCap: 'round',
+              lineJoin: 'round'
+            }).addTo(map);
+
+            segPoly.bindTooltip(
+              `<strong>${selectedRoute.name}</strong><br/>` +
+              `Congestion: <b style="color:${fallbackColor};">${selectedRoute.congestionPct}%</b> ${isEarly15 ? '(🔮 15-Min Forecast)' : ''}<br/>` +
+              `Speed: ${selectedRoute.avgSpeed} km/h • ETA: ${selectedRoute.durationMin} min`,
+              { sticky: true }
+            );
+            routeLayersRef.current.push(segPoly);
+          }
+        }
+
+        // Add per-segment congestion callout badges along the route
+        if (segments && segments.length > 0 && pts.length > 2) {
+          const totalSegKm = segments.reduce((s, seg) => s + (seg.lengthKm || 1), 0);
+          let cumFraction = 0;
+
+          segments.forEach((seg) => {
+            const segFraction = (seg.lengthKm || 1) / totalSegKm;
+            // Place badge at the midpoint of this segment
+            const badgeFraction = cumFraction + segFraction / 2;
+            const badgePtIdx = Math.min(Math.floor(badgeFraction * (pts.length - 1)), pts.length - 1);
+            const badgePt = pts[badgePtIdx];
+            const segColor = seg.status ? (STATUS_COLORS[seg.status] || congestionToColor(seg.congestion || 0)) : congestionToColor(seg.congestion || 0);
+            const segCongestion = seg.congestion || 0;
+
+            const badgeIcon = L.divIcon({
+              className: 'map-midpoint-callout',
+              html: `<div class="midpoint-badge ${isEarly15 ? 'badge-early15' : ''}" style="border-left: 4px solid ${segColor};">
+                <span class="badge-icon">${seg.status === 'red' ? '🔴' : seg.status === 'orange' ? '🟠' : seg.status === 'yellow' ? '🟡' : '🟢'}</span>
+                <span class="badge-text"><b style="color:${segColor};">${segCongestion}%</b> ${seg.name.length > 25 ? seg.name.substring(0, 22) + '…' : seg.name} ${isEarly15 ? '<span class="bubble-tag">🔮 15m</span>' : ''}</span>
+              </div>`,
+              iconSize: [240, 30],
+              iconAnchor: [120, 15]
+            });
+            const badgeMarker = L.marker(badgePt, { icon: badgeIcon, zIndexOffset: 800 }).addTo(map);
+            routeLayersRef.current.push(badgeMarker);
+
+            cumFraction += segFraction;
+          });
+        } else if (pts.length > 2) {
+          // Fallback single midpoint badge
           const midPt = pts[Math.floor(pts.length / 2)];
-          const isEarly15 = (timePeriod === 'early15');
           const congPct = selectedRoute ? selectedRoute.congestionPct : 0;
           const congColor = congPct > 75 ? '#dc2626' : (congPct > 40 ? '#ea580c' : '#16a34a');
 
