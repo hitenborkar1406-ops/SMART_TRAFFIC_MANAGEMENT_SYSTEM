@@ -1061,7 +1061,7 @@ function App() {
                 e('span', { className: 'forecast-pill' }, 'T + 15 min Lookahead')
               ),
               e('div', { className: 'early-prediction-banner-body' },
-                '🔮 XG-Forest (XGBoost) predictive engine forecasts severe congestion forming within 15 minutes on direct arterials. Traffic is proactively redirected to parallel relief avenues before bottlenecks lock up.'
+                '🔮 XGBoost predictive engine forecasts severe congestion forming within 15 minutes on direct arterials. Traffic is proactively redirected to parallel relief avenues before bottlenecks lock up.'
               )
             ),
 

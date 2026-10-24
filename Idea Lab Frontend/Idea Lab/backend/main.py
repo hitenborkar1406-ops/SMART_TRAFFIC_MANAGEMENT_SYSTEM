@@ -338,7 +338,7 @@ def get_15min_early_prediction(route_id: Optional[str] = None):
     return {
         "status": "success",
         "horizon": "15 minutes advance lookahead",
-        "model": "XG-Forest (XGBoost) Predictive Classifier",
+        "model": "XGBoost Predictive Classifier",
         "accuracy": "93.8%",
         "corridors": forecasts
     }
