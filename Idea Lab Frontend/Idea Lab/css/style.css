@@ -1884,6 +1884,12 @@ html, body {
     display: none;
   }
 
+  .map-route-hud-panel {
+    top: 10px;
+    max-width: 95%;
+    padding: 5px 12px;
+  }
+
   .analytics-bar-grid {
     grid-template-columns: 1fr;
   }
@@ -2015,26 +2021,26 @@ html, body {
    MAP LIVE ROUTE HUD & MARKER CONGESTION BADGES
    ========================================================================== */
 .map-route-hud-panel {
-  top: 16px;
+  top: 68px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
   border-radius: 30px;
-  padding: 7px 18px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
-  z-index: 999;
+  padding: 6px 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 450;
   display: flex;
   align-items: center;
   transition: all 0.25s ease;
   pointer-events: auto;
+  white-space: nowrap;
 }
 
 .map-route-hud-panel.hud-early15 {
   border: 1.5px solid #8b5cf6;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(124, 58, 237, 0.22);
 }
 
 .hud-content {
