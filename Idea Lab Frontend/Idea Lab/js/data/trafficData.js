@@ -7,7 +7,7 @@
 window.TIME_PERIODS = {
   current: {
     id: 'current',
-    label: 'Current Time (Live)',
+    label: 'Current Time',
     timeRange: 'Real-time telemetry',
     congestionMultiplier: 1.0,
     activeVehicles: 1240,
