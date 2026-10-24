@@ -1,7 +1,7 @@
 # Nagpur Traffic Congestion API
 
 FastAPI service that serves congestion predictions from `nagpur_traffic_model.pkl`
-(scikit-learn Pipeline: StandardScaler + OneHotEncoder -> RandomForestClassifier) and route data from
+(scikit-learn / XGBoost Pipeline: StandardScaler + OneHotEncoder -> XG-Forest / XGBoost Classifier) and route data from
 `nagpur_current_congestion.csv`.
 
 ## Setup

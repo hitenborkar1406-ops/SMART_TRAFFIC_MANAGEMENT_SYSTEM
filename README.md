@@ -16,7 +16,7 @@ The repository comprises two primary modules:
    - **Launch Scripts**: Quick launch scripts for both Windows (`start_server.bat`) and Linux (`start_server.sh`).
 
 2. **`nagpur-traffic-backend-full/nagpur-traffic-backend`**
-   - **Predictive ML Service**: FastAPI service equipped with a trained Random Forest model predicting congestion levels across key Nagpur corridors.
+   - **Predictive ML Service**: FastAPI service equipped with a trained XG-Forest (XGBoost) model predicting congestion levels across key Nagpur corridors.
    - **Endpoints**: Route congestion analysis, historical telemetry, and alternate route evaluation.
 
 ---

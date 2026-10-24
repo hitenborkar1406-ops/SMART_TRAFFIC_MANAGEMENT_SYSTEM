@@ -27,7 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Nagpur Traffic Congestion API",
     version="1.0.0",
-    description="Serves congestion predictions from the trained RandomForest pipeline and route data "
+    description="Serves congestion predictions from the trained XG-Forest (XGBoost) pipeline and route data "
                 "from nagpur_current_congestion.csv.",
     lifespan=lifespan,
 )
