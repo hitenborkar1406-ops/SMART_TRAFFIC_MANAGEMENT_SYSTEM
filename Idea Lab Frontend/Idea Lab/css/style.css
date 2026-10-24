@@ -1888,3 +1888,126 @@ html, body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================================================
+   15-MINUTE ML EARLY PREDICTION STYLES
+   ========================================================================== */
+.time-btn.time-early15 {
+  background: rgba(124, 58, 237, 0.08);
+  border-color: #8b5cf6;
+  color: #7c3aed;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-btn.time-early15:hover {
+  background: rgba(124, 58, 237, 0.16);
+  color: #6d28d9;
+}
+
+.time-btn.time-early15.active {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  border-color: #6d28d9;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.45);
+}
+
+.early-prediction-banner {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1px solid #c4b5fd;
+  border-left: 4px solid #7c3aed;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.08);
+  animation: fadeInDown 0.3s ease;
+}
+
+.early-prediction-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 0.84rem;
+  color: #5b21b6;
+  margin-bottom: 4px;
+}
+
+.early-prediction-banner-body {
+  font-size: 0.76rem;
+  color: #4c1d95;
+  line-height: 1.45;
+}
+
+.forecast-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.70rem;
+  font-weight: 700;
+  background: #7c3aed;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.route-early-warning-badge {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin: 4px 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.route-early-bypass-badge {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: #6d28d9;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin: 4px 0 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hotspot-forecast-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 0.74rem;
+}
+
+.forecast-surge-tag {
+  font-weight: 800;
+  color: #7c3aed;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

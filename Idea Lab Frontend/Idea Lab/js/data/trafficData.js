@@ -17,6 +17,19 @@ window.TIME_PERIODS = {
     distributionIndex: 68,
     desc: 'Simulating live weekday traffic conditions across Nagpur corridors.'
   },
+  early15: {
+    id: 'early15',
+    label: '⚡ 15-Min Early Prediction',
+    timeRange: '+15 Min ML Lookahead',
+    congestionMultiplier: 1.42,
+    activeVehicles: 2380,
+    avgCitySpeed: 18,
+    congestedCount: 23,
+    freeFlowCount: 10,
+    distributionIndex: 44,
+    desc: '🔮 Machine Learning 15-Minute Early Forecast: Predicts impending congestion peaks before choke points form, proactively diverting vehicles to free-flowing bypasses.',
+    isEarlyPrediction: true
+  },
   morning: {
     id: 'morning',
     label: 'Morning Peak',

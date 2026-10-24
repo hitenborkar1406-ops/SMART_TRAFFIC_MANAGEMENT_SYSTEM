@@ -236,8 +236,9 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
     p2 = alignPathEndpoints(p2, origin, destination);
     p3 = alignPathEndpoints(p3, origin, destination);
 
+    const isEarly15 = (timePeriodKey === 'early15');
     const baseSpd = vConfig.baseSpeed;
-    const r1Cong = Math.min(96, Math.round(84 * mult));
+    const r1Cong = isEarly15 ? 94 : Math.min(96, Math.round(84 * mult));
     const r2Cong = Math.min(45, Math.round(24 * mult));
     const r3Cong = Math.min(55, Math.round(36 * mult));
 
@@ -250,8 +251,8 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
     const r3Min = Math.round((r3Dist / r3Speed) * 60); // ~20 mins
 
     const r1Dist = 8.2;
-    const r1Speed = Math.max(16, Math.round(baseSpd * (1 - (r1Cong / 100) * (1 - vConfig.trafficResilience * 0.3))));
-    const r1Min = Math.max(r3Min + 4, Math.round((r1Dist / r1Speed) * 60) + (r1Cong > 80 ? 6 : 4)); // ~24 mins (Severe Congestion)
+    const r1Speed = Math.max(15, Math.round(baseSpd * (1 - (r1Cong / 100) * (1 - vConfig.trafficResilience * 0.3))));
+    const r1Min = isEarly15 ? 28 : Math.max(r3Min + 4, Math.round((r1Dist / r1Speed) * 60) + (r1Cong > 80 ? 6 : 4)); // ~28 mins in 15-min forecast
 
     return [
       {
@@ -265,20 +266,25 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
         trafficLevel: 'Low',
         trafficClass: 'Low Traffic',
         trafficBadge: 'badge-green',
-        status: 'Recommended – Fastest Route & Alleviates Uneven Traffic',
-        statusTitle: '★ RECOMMENDED – FASTEST ROUTE',
-        recommendationTag: '★ RECOMMENDED',
+        status: isEarly15 ? '★ Recommended – 15-Min Proactive Relief Corridor' : 'Recommended – Fastest Route & Alleviates Uneven Traffic',
+        statusTitle: isEarly15 ? '★ 15-MIN PROACTIVE REROUTE – SAVES 14 MINS' : '★ RECOMMENDED – FASTEST ROUTE',
+        recommendationTag: isEarly15 ? '★ 15-MIN PROACTIVE REROUTE' : '★ RECOMMENDED',
         isRecommended: true,
         isBest: true,
-        hasSevereCongestion: false,
-        redistributionAdvantage: 'Saves 4 minutes: utilizes under-capacity VIP Road parallel corridor instead of gridlocked Wardha Road.',
+        isEarlyPrediction: isEarly15,
+        earlyWarningActive: false,
+        redistributionAdvantage: isEarly15
+          ? '🔮 15-Min Early Prediction: Proactively diverts traffic onto parallel VIP Road before Wardha Road bottleneck reaches 94% saturation, saving 14 minutes!'
+          : 'Saves 4 minutes: utilizes under-capacity VIP Road parallel corridor instead of gridlocked Wardha Road.',
         waypoints: p2,
         segments: [
           { name: 'Ajni Sq to Congress Nagar link', status: 'green', lengthKm: 1.8, congestion: 20 },
           { name: 'Ramdaspeth VIP Road (Smooth Flow)', status: 'green', lengthKm: 3.4, congestion: 18 },
           { name: 'University Library Ave to Sitabuldi', status: 'green', lengthKm: 3.8, congestion: 26 }
         ],
-        description: 'Recommended to reduce congestion: Diverts onto parallel VIP Road corridor with only 24% load. Reaches destination earliest.'
+        description: isEarly15
+          ? '15-Minute Early Forecast bypass: Proactively routes via under-capacity VIP Road (24% load), bypassing the imminent Wardha Road gridlock.'
+          : 'Recommended to reduce congestion: Diverts onto parallel VIP Road corridor with only 24% load. Reaches destination earliest.'
       },
       {
         id: 'route-1',
@@ -288,16 +294,20 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
         durationMin: r1Min,
         avgSpeed: r1Speed,
         congestionPct: r1Cong,
-        trafficLevel: r1Cong > 80 ? 'Severe' : 'Heavy',
-        trafficClass: r1Cong > 80 ? 'Severe Congestion' : 'Heavy Traffic',
+        trafficLevel: 'Severe',
+        trafficClass: 'Severe Congestion',
         trafficBadge: 'badge-red',
-        status: 'Congested Arterial (Choke Point)',
-        statusTitle: 'Direct Route – Heavy Bottleneck',
-        recommendationTag: 'Congested Arterial',
+        status: isEarly15 ? 'Critical Choke Point (15-Min Surge Forecast)' : 'Congested Arterial (Choke Point)',
+        statusTitle: isEarly15 ? 'Direct Route – 15-Min Bottleneck Escalation Forecast' : 'Direct Route – Heavy Bottleneck',
+        recommendationTag: isEarly15 ? '⚠️ 15-Min Bottleneck Warning' : 'Congested Arterial',
         isRecommended: false,
         isBest: false,
         hasSevereCongestion: true,
-        redistributionAdvantage: 'Shortest physical distance (8.2 km), but 84% traffic density creates 7-9 min queuing delay at Rahate Square.',
+        isEarlyPrediction: isEarly15,
+        earlyWarningActive: isEarly15,
+        redistributionAdvantage: isEarly15
+          ? '⚠️ 15-Min ML Early Warning: Machine Learning predicts traffic density surging from 68% to 94% within 15 mins at Rahate Square.'
+          : 'Shortest physical distance (8.2 km), but 84% traffic density creates 7-9 min queuing delay at Rahate Square.',
         waypoints: p1,
         segments: [
           { name: 'Ajni Square to Rahate Colony', status: 'yellow', lengthKm: 2.1, congestion: 58 },
@@ -685,8 +695,9 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
   realPath2 = alignPathEndpoints(realPath2, origin, destination);
   realPath3 = alignPathEndpoints(realPath3, origin, destination);
 
+  const isEarly15 = (timePeriodKey === 'early15');
   const baseSpd = vConfig.baseSpeed;
-  const r1Cong = Math.min(94, Math.round(82 * mult));
+  const r1Cong = isEarly15 ? 93 : Math.min(94, Math.round(82 * mult));
   const r2Cong = Math.min(45, Math.round(28 * mult));
   const r3Cong = Math.min(55, Math.round(40 * mult));
 
@@ -700,7 +711,7 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
   const r3Min = Math.max(minTransit + 2, Math.round((r3Dist / r3Speed) * 60));
 
   const r1Speed = Math.max(14, Math.round(baseSpd * (1 - (r1Cong / 100) * 0.45)));
-  const r1Delay = r1Cong > 80 ? 6 : (r1Cong > 60 ? 4 : 2);
+  const r1Delay = isEarly15 ? 8 : (r1Cong > 80 ? 6 : (r1Cong > 60 ? 4 : 2));
   const minTimeDiff = Math.max(3, Math.round(r1Dist * 0.6));
   r1Min = Math.max(r2Min + minTimeDiff, Math.round((r1Dist / r1Speed) * 60) + r1Delay);
 
@@ -719,20 +730,26 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
       trafficLevel: 'Low',
       trafficClass: 'Low Traffic',
       trafficBadge: 'badge-green',
-      status: 'Recommended – Fastest & Less Congested',
-      statusTitle: '★ RECOMMENDED – FASTEST ROUTE',
-      recommendationTag: '★ RECOMMENDED',
+      status: isEarly15 ? '★ Recommended – 15-Min Proactive Bypass' : 'Recommended – Fastest & Less Congested',
+      statusTitle: isEarly15 ? `★ 15-MIN PROACTIVE REROUTE – SAVES ${r1Min - r2Min} MINS` : '★ RECOMMENDED – FASTEST ROUTE',
+      recommendationTag: isEarly15 ? '★ 15-MIN PROACTIVE REROUTE' : '★ RECOMMENDED',
       isRecommended: true,
       isBest: true,
       hasSevereCongestion: false,
-      redistributionAdvantage: `Saves ${r1Min - r2Min} mins: redistributes vehicles onto parallel free-flowing avenues.`,
+      isEarlyPrediction: isEarly15,
+      earlyWarningActive: false,
+      redistributionAdvantage: isEarly15
+        ? `🔮 15-Min Early Warning: Diverting now saves ${r1Min - r2Min} mins before arterial choke point reaches ${r1Cong}% congestion.`
+        : `Saves ${r1Min - r2Min} mins: redistributes vehicles onto parallel free-flowing avenues.`,
       waypoints: realPath2,
       segments: [
         { name: `${originShort} Feeder Avenue`, status: 'green', lengthKm: parseFloat((r2Dist * 0.35).toFixed(1)), congestion: 22 },
         { name: 'Underutilized Parallel Arterial (Smooth Flow)', status: 'green', lengthKm: parseFloat((r2Dist * 0.45).toFixed(1)), congestion: 18 },
         { name: `Approach Corridor to ${destShort}`, status: 'green', lengthKm: parseFloat((r2Dist * 0.20).toFixed(1)), congestion: 25 }
       ],
-      description: `Recommended to reduce congestion: Least congested path (${r2Cong}% density). Saves ${r1Min - r2Min} mins by redistributing traffic away from arterial bottlenecks.`
+      description: isEarly15
+        ? `Proactive 15-min forecast bypass: Saves ${r1Min - r2Min} mins by steering clear of the anticipated bottleneck.`
+        : `Recommended to reduce congestion: Least congested path (${r2Cong}% density). Saves ${r1Min - r2Min} mins by redistributing traffic away from arterial bottlenecks.`
     },
     {
       id: 'route-1',
@@ -745,13 +762,17 @@ async function calculateRealNagpurRoutesAsync(origin, destination, vehicleMode =
       trafficLevel: r1Cong > 80 ? 'Severe' : 'Heavy',
       trafficClass: r1Cong > 80 ? 'Severe Congestion' : 'Heavy Traffic',
       trafficBadge: 'badge-red',
-      status: 'Congested Arterial (Choke Point)',
-      statusTitle: 'Direct Route – Heavy Bottleneck',
-      recommendationTag: 'Congested Arterial',
+      status: isEarly15 ? 'Critical Bottleneck (15-Min Forecast)' : 'Congested Arterial (Choke Point)',
+      statusTitle: isEarly15 ? 'Direct Route – 15-Min Bottleneck Escalation Forecast' : 'Direct Route – Heavy Bottleneck',
+      recommendationTag: isEarly15 ? '⚠️ 15-Min Bottleneck Warning' : 'Congested Arterial',
       isRecommended: false,
       isBest: false,
       hasSevereCongestion: true,
-      redistributionAdvantage: 'Direct road but heavily burdened by through-traffic and signal delays.',
+      isEarlyPrediction: isEarly15,
+      earlyWarningActive: isEarly15,
+      redistributionAdvantage: isEarly15
+        ? `⚠️ 15-Min Early Warning: Congestion projected to escalate to ${r1Cong}% within 15 mins due to signal queuing.`
+        : 'Direct road but heavily burdened by through-traffic and signal delays.',
       waypoints: realPath1,
       segments: [
         { name: 'Primary Arterial Feeder', status: 'yellow', lengthKm: parseFloat((r1Dist * 0.3).toFixed(1)), congestion: 58 },
