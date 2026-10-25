@@ -6,8 +6,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application files (JSON array format required for paths with spaces)
-COPY ["Idea Lab Frontend/Idea Lab", "./"]
+# Copy frontend and backend directories
+COPY frontend ./frontend
+COPY backend ./backend
 
 # Render exposes dynamic PORT environment variable (defaults to 10000)
 ENV PORT=8000

@@ -5,3 +5,8 @@ __pycache__
 *.pptx
 *.log
 .pytest_cache
+docs/
+.venv/
+.env
+backend/ml_service/models/*.pkl
+backend/ml_service/data/*.csv

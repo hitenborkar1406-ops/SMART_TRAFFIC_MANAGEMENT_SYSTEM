@@ -15,6 +15,6 @@ python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo Uvicorn exited or encountered an issue. Starting standard HTTP server fallback...
-    python -m http.server 8000
+    python -m http.server 8000 --directory frontend
 )
 pause

@@ -29,5 +29,5 @@ python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 if [ $? -ne 0 ]; then
     echo ""
     echo "Uvicorn exited or encountered an issue. Starting standard HTTP server fallback..."
-    python3 -m http.server 8000
+    python3 -m http.server 8000 --directory frontend
 fi

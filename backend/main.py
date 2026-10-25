@@ -397,20 +397,47 @@ async def calculate_route(req: RouteRequest):
 # ---------------------------------------------------------------------------
 # SERVE STATIC FILES (FRONTEND)
 # ---------------------------------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+ROOT_DIR = os.path.dirname(BACKEND_DIR)
+
+# Locate frontend directory dynamically
+possible_frontend_dirs = [
+    os.getenv("FRONTEND_DIR", ""),
+    os.path.join(ROOT_DIR, "frontend"),
+    os.path.join(BACKEND_DIR, "frontend"),
+    os.path.join(BACKEND_DIR, "..", "frontend"),
+    ROOT_DIR,
+]
+FRONTEND_DIR = next(
+    (p for p in possible_frontend_dirs if p and os.path.isfile(os.path.join(p, "index.html"))),
+    os.path.join(ROOT_DIR, "frontend")
+)
 
 # Mount css, js, and assets directories
-app.mount("/css", StaticFiles(directory=os.path.join(BASE_DIR, "css")), name="css")
-app.mount("/js", StaticFiles(directory=os.path.join(BASE_DIR, "js")), name="js")
-app.mount("/assets", StaticFiles(directory=os.path.join(BASE_DIR, "assets")), name="assets")
+css_dir = os.path.join(FRONTEND_DIR, "css")
+js_dir = os.path.join(FRONTEND_DIR, "js")
+assets_dir = os.path.join(FRONTEND_DIR, "assets")
+
+if os.path.isdir(css_dir):
+    app.mount("/css", StaticFiles(directory=css_dir), name="css")
+if os.path.isdir(js_dir):
+    app.mount("/js", StaticFiles(directory=js_dir), name="js")
+if os.path.isdir(assets_dir):
+    app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
 @app.get("/")
 def serve_index():
-    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.isfile(index_file):
+        return FileResponse(index_file)
+    return {"message": "Nagpur Smart Traffic Management API is running", "docs": "/docs"}
 
 @app.get("/index.html")
 def serve_index_explicit():
-    return FileResponse(os.path.join(BASE_DIR, "index.html"))
+    index_file = os.path.join(FRONTEND_DIR, "index.html")
+    if os.path.isfile(index_file):
+        return FileResponse(index_file)
+    return {"message": "Nagpur Smart Traffic Management API is running", "docs": "/docs"}
 
 if __name__ == "__main__":
     import uvicorn

@@ -26,18 +26,27 @@ An intelligent urban traffic routing and management platform engineered to resol
 
 The repository comprises two primary modules:
 
-1. **`Idea Lab Frontend/Idea Lab`**
-   - **Interactive Web Interface**: Leaflet-powered GIS dashboard, custom responsive UI controls, and route selection HUD.
-   - **Integrated FastAPI Service (`backend/main.py`)**:
-     - Serves web assets with cache-control headers.
-     - Provides geocoding (`/api/geocode`) with built-in fallback coordinates for Nagpur localities.
-     - Exposes real-time traffic condition queries (`/api/traffic`, `/api/traffic/hotspots`, `/api/traffic/predict-15min`).
-     - Orchestrates multi-route generation and congestion scoring (`/api/route`).
-   - **Launch Scripts**: Quick launch scripts for Linux (`start_server.sh`) and Windows (`start_server.bat`).
+1. **`frontend/`**
+   - **Interactive Web Interface**: High-fidelity Leaflet GIS dashboard, responsive UI controls, and live route selection HUD.
+   - **Components & Data**:
+     - `css/style.css`: Modern UI design system and map styling.
+     - `js/app.js`: Main client map and telemetry application controller.
+     - `js/data/`: Nagpur road network coordinates, vehicle profiles, and street geometries.
+     - `js/services/`: Client-side route calculations and fallback algorithms.
+     - `assets/`: Reference city maps and imagery.
 
-2. **`nagpur-traffic-backend-full/nagpur-traffic-backend`**
-   - **Predictive ML Service**: FastAPI service equipped with a trained XGBoost model predicting congestion levels across key Nagpur corridors.
-   - **Endpoints**: Route congestion analysis, historical telemetry, and alternate route evaluation.
+2. **`backend/`**
+   - **Integrated FastAPI Service (`backend/main.py`)**:
+     - Dynamic static file routing serving `frontend/`.
+     - Nagpur geocoding with local locality resolution (`/api/geocode`).
+     - Traffic condition queries (`/api/traffic`, `/api/traffic/hotspots`, `/api/traffic/predict-15min`).
+     - Dynamic multi-route generation and congestion scoring (`/api/route`).
+   - **Machine Learning Service (`backend/ml_service/`)**:
+     - Standalone FastAPI predictive service powered by a trained XGBoost classifier.
+     - Historical corridor datasets and model artifact definitions.
+
+3. **`docs/`**
+   - Project presentation slide decks and hackathon documentation.
 
 ---
 
@@ -45,26 +54,33 @@ The repository comprises two primary modules:
 
 ```text
 SMART-TRAFFIC/
-├── Dockerfile                             # Container build file for web & API service
-├── requirements.txt                       # Python dependencies
-├── README.md                              # Project documentation
-├── Idea Lab Frontend/
-│   └── Idea Lab/
-│       ├── backend/
-│       │   └── main.py                    # FastAPI server & routing engine
-│       ├── css/
-│       │   └── styles.css                 # Application styling & layout
-│       ├── js/
-│       │   └── app.js                     # Client-side map & routing controller
-│       ├── index.html                     # Main application entry point
-│       ├── start_server.sh                # Linux launch script
-│       └── start_server.bat               # Windows launch script
-└── nagpur-traffic-backend-full/
-    └── nagpur-traffic-backend/
-        ├── app/
-        │   └── main.py                    # Standalone ML predictive API
-        ├── data/                          # Nagpur corridor datasets
-        └── models/                        # Pre-trained ML model binaries
+├── frontend/                              # Web application UI & GIS map
+│   ├── index.html                         # Main entry point
+│   ├── css/                               # Styling & design system
+│   │   └── style.css
+│   ├── js/                                # Application logic & road telemetry
+│   │   ├── app.js
+│   │   ├── data/
+│   │   └── services/
+│   └── assets/                            # Map visuals & references
+│
+├── backend/                               # FastAPI routing & telemetry engine
+│   ├── main.py                            # Gateway & routing API
+│   ├── requirements.txt                   # Backend dependencies
+│   ├── .env.example                       # Environment template
+│   └── ml_service/                        # XGBoost ML predictive service
+│       ├── app/                           # ML service logic & schemas
+│       ├── data/                          # Nagpur corridor CSV datasets
+│       ├── models/                        # Pre-trained ML model binaries
+│       ├── tests/                         # API test suite
+│       └── requirements.txt
+│
+├── docs/                                  # Presentation decks & documentation
+├── start_server.sh                        # Linux quick launch script
+├── start_server.bat                       # Windows quick launch script
+├── Dockerfile                             # Production Docker container definition
+├── requirements.txt                       # Root Python dependencies
+└── README.md                              # Project documentation
 ```
 
 ---
@@ -94,17 +110,14 @@ SMART-TRAFFIC/
 3. **Start the application:**
    - **On Linux / macOS:**
      ```bash
-     cd "Idea Lab Frontend/Idea Lab"
      ./start_server.sh
      ```
    - **On Windows:**
      ```cmd
-     cd "Idea Lab Frontend\Idea Lab"
      start_server.bat
      ```
    - **Or via Uvicorn directly:**
      ```bash
-     cd "Idea Lab Frontend/Idea Lab"
      python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
      ```
 
